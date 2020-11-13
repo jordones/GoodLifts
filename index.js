@@ -22,7 +22,7 @@ const alreadyNotifiedWorkouts = new Set(); // workout notify ignore-list
 function notifyAll(info) {
   if (!process.env.DEBUG) {
     notifyNumbers.forEach(number => {
-      const message = client.messages.create({
+      client.messages.create({
         body: info,
         from: twilioNumber,
         to: number
@@ -71,7 +71,7 @@ function main() {
       }
     }
   ).catch( 
-    error => {
+    () => {
       console.log(`Failed to GET json for club ${clubNumber}`);
       if (!onceToken) {
         onceToken = true;

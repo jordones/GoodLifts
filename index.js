@@ -18,6 +18,7 @@ const host = 'https://www.goodlifefitness.com';
 const path = `/content/goodlife/en/book-workout/jcr:content/root/responsivegrid/workoutbooking.GetWorkoutSlots.${clubNumber}.json`;
 let onceToken = false; // Used to prevent spamming errors to SMS
 const alreadyNotifiedWorkouts = new Set(); // workout notify ignore-list
+const client = require('twilio')(accountSid, authToken);
 
 function notifyAll(info) {
   if (!process.env.DEBUG) {

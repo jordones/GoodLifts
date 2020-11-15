@@ -51,13 +51,14 @@ function main() {
           // Filter for workouts that are schedulable
           const availableWorkouts = workouts.filter(workout => workout.availableSlots > 0);
           let message = `There are ${availableWorkouts.length} new slots available:`;
+          let sendMessage = false;
           availableWorkouts.forEach((workout, index) => {
             try {
               if (alreadyNotifiedWorkouts.has(workout.identifier)) {
                 console.log(`Skipping alert for ${workout.identifier} - Already notified`);
                 return;
               };
-    
+              sendMessage = true;
               alreadyNotifiedWorkouts.add(workout.identifier);
               console.log(`Adding ${workout.identifier} to list of already notified workouts`);
               const formattedStartTime = new Date(workout.startAt).toString();
@@ -70,18 +71,20 @@ function main() {
             
           })
 
-          try {
-            if (message.length > MESSAGE_LIMIT) {
-              const numChunks = Math.ceil(message.length/MESSAGE_LIMIT);
-              for (i = 0; i < numChunks; i++) {
-                const substr = message.substr(i * MESSAGE_LIMIT, MESSAGE_LIMIT);
-                notifyAll(substr);
+          if (sendMessage) {
+            try {
+              if (message.length > MESSAGE_LIMIT) {
+                const numChunks = Math.ceil(message.length/MESSAGE_LIMIT);
+                for (i = 0; i < numChunks; i++) {
+                  const substr = message.substr(i * MESSAGE_LIMIT, MESSAGE_LIMIT);
+                  notifyAll(substr);
+                }
+              } else {
+                notifyAll(message);
               }
-            } else {
-              notifyAll(message);
+            } catch (err) {
+              console.log('Failed to send message:\n', message);
             }
-          } catch (err) {
-            console.log('Failed to send message:\n', message);
           }
         }
       }
@@ -96,4 +99,5 @@ function main() {
   });
 }
 
+main();
 setInterval(main, 300000);

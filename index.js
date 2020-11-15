@@ -77,6 +77,8 @@ function main() {
                 const substr = message.substr(i * MESSAGE_LIMIT, MESSAGE_LIMIT);
                 notifyAll(substr);
               }
+            } else {
+              notifyAll(message);
             }
           } catch (err) {
             console.log('Failed to send message:\n', message);

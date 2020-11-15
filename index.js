@@ -19,6 +19,7 @@ const path = `/content/goodlife/en/book-workout/jcr:content/root/responsivegrid/
 let onceToken = false; // Used to prevent spamming errors to SMS
 const alreadyNotifiedWorkouts = new Set(); // workout notify ignore-list
 const client = require('twilio')(accountSid, authToken);
+const MESSAGE_LIMIT = 1562;
 
 function notifyAll(info) {
   if (!process.env.DEBUG) {
@@ -48,8 +49,9 @@ function main() {
           // and filter for elements where option had no workouts
           const workouts = options.map(option => option.workouts).flat(1).filter(workout => workout !== undefined);
           // Filter for workouts that are schedulable
-          const availableWorkouts = workouts.filter(workout => workout.availableSlots > 0);          
-          availableWorkouts.forEach(workout => {
+          const availableWorkouts = workouts.filter(workout => workout.availableSlots > 0);
+          let message = `There are ${availableWorkouts.length} new slots available:`;
+          availableWorkouts.forEach((workout, index) => {
             try {
               if (alreadyNotifiedWorkouts.has(workout.identifier)) {
                 console.log(`Skipping alert for ${workout.identifier} - Already notified`);
@@ -61,13 +63,24 @@ function main() {
               const formattedStartTime = new Date(workout.startAt).toString();
               const formattedEndTime = new Date(workout.endAt).toString();
               console.log(`There is an open booking for ${workout.gymArea} from ${formattedStartTime} to ${formattedEndTime}`);
-              notifyAll(`There is an open booking for ${workout.gymArea} from ${formattedStartTime} to ${formattedEndTime}`);
-  
+              message = message.concat(`\n${index + 1}. ${formattedStartTime}\n`);
             } catch (err) {
               console.log(`Skipping notification for ${workout.identifier} - Error encountered`);
             }
             
           })
+
+          try {
+            if (message.length > MESSAGE_LIMIT) {
+              const numChunks = Math.ceil(message.length/MESSAGE_LIMIT);
+              for (i = 0; i < numChunks; i++) {
+                const substr = message.substr(i * MESSAGE_LIMIT, MESSAGE_LIMIT);
+                notifyAll(substr);
+              }
+            }
+          } catch (err) {
+            console.log('Failed to send message:\n', message);
+          }
         }
       }
     }
